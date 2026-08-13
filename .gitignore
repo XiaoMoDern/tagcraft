@@ -1,0 +1,24 @@
+# 依赖
+node_modules/
+vendor/
+
+# 构建产物
+dist/
+backend/tagcraft
+backend/tagcraft.exe
+*.tsbuildinfo
+frontend/vite.config.js
+
+# 环境变量（千万别提交 key）
+.env
+.env.local
+.env.*.local
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# 日志
+*.log
