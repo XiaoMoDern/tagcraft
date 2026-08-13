@@ -52,7 +52,7 @@ func handleCreateCheckout(w http.ResponseWriter, r *http.Request) {
 	form.Set("cancel_url", cancelURL)
 	form.Set("line_items[0][quantity]", "1")
 	form.Set("line_items[0][price_data][currency]", "usd")
-	form.Set("line_items[0][price_data][unit_amount]", "1900") // 1900 美分 = $19.00
+	form.Set("line_items[0][price_data][unit_amount]", "900") // 900 美分 = $9.00
 	form.Set("line_items[0][price_data][recurring][interval]", "month")
 	form.Set("line_items[0][price_data][product_data][name]", "TagCraft Pro")
 	// Managed Payments 要求 product tax_code（SaaS 用 txcd_10103001）

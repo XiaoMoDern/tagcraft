@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { generate, createCheckout } from './api'
+import { generate } from './api'
 import type { GenerateRequest, GenerateResponse } from './types'
 
-const FREE_LIMIT = 3
+const FREE_LIMIT = 5
 const USED_KEY = 'tagcraft_used_free'
 const PRO_KEY = 'tagcraft_pro'
+const WAITLIST_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSebWLkESa_Hrb789FuukjT5lWik1_q5fKleYWnmf657G7TvnQ/viewform'
 
 const categories = [
   { value: 'jewelry', label: 'Jewelry' },
@@ -70,14 +71,9 @@ async function handleGenerate() {
   }
 }
 
-async function handleUpgrade() {
-  errorMsg.value = ''
-  try {
-    const { url } = await createCheckout()
-    window.location.href = url
-  } catch (e) {
-    errorMsg.value = e instanceof Error ? e.message : 'failed to start checkout'
-  }
+// MVP 阶段用 waitlist 收集意向用户邮箱，等切 Paddle 后改回真实 checkout
+function handleUpgrade() {
+  window.open(WAITLIST_URL, '_blank')
 }
 
 async function copy(text: string, key: string) {
@@ -184,11 +180,11 @@ async function copy(text: string, key: string) {
         </div>
       </section>
 
-      <!-- 付费墙 -->
+      <!-- 付费墙（MVP 阶段 waitlist，等切 Paddle 后改回真实 checkout） -->
       <section v-if="reachedLimit" class="card paywall">
         <h2>🔒 Free limit reached</h2>
-        <p>You've used all {{ FREE_LIMIT }} free generations. Upgrade to TagCraft Pro for unlimited Etsy SEO content.</p>
-        <button class="btn-upgrade" @click="handleUpgrade">$19/month — Upgrade</button>
+        <p>You've used all {{ FREE_LIMIT }} free generations. TagCraft Pro is coming soon — join the waitlist for early access and a special launch price.</p>
+        <button class="btn-upgrade" @click="handleUpgrade">Join Waitlist →</button>
       </section>
     </main>
 
