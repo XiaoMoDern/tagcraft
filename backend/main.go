@@ -16,7 +16,9 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/generate", handleGenerate)
+	// /generate 加 IP 限流（防 DeepSeek 额度被刷）；/health 和 /create-checkout 不限
+	rl := newRateLimiter()
+	mux.HandleFunc("/generate", rateLimitMiddleware(rl, handleGenerate))
 	mux.HandleFunc("/create-checkout", handleCreateCheckout)
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
