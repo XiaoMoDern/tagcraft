@@ -8,6 +8,7 @@ backend/tagcraft
 backend/tagcraft.exe
 *.tsbuildinfo
 frontend/vite.config.js
+frontend/vite.config.d.ts
 
 # 环境变量（千万别提交 key）
 .env
