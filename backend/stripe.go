@@ -55,6 +55,9 @@ func handleCreateCheckout(w http.ResponseWriter, r *http.Request) {
 	form.Set("line_items[0][price_data][unit_amount]", "1900") // 1900 美分 = $19.00
 	form.Set("line_items[0][price_data][recurring][interval]", "month")
 	form.Set("line_items[0][price_data][product_data][name]", "TagCraft Pro")
+	// Managed Payments 要求 product tax_code（SaaS 用 txcd_10103001）
+	// https://stripe.com/docs/tax/tax-codes
+	form.Set("line_items[0][price_data][product_data][tax_code]", "txcd_10103001")
 
 	req, err := http.NewRequest(http.MethodPost, stripeCheckoutURL, strings.NewReader(form.Encode()))
 	if err != nil {
