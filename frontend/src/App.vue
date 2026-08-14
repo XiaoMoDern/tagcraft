@@ -65,7 +65,17 @@ async function handleGenerate() {
       localStorage.setItem(USED_KEY, String(usedFree.value))
     }
   } catch (e) {
-    errorMsg.value = e instanceof Error ? e.message : 'generation failed'
+    const msg = e instanceof Error ? e.message : 'generation failed'
+    if (msg === 'daily free limit reached' && !isPro.value) {
+      // 后端 IP 限流已到每日上限，但前端计数可能没同步到 FREE_LIMIT
+      // （IP 计数残留 / 同一公网 IP 多人共用 / 后端先于前端拦截）。
+      // 强制拉到上限，触发付费墙，避免"后端 429 拦了、前端却不显示入口"的死锁。
+      usedFree.value = FREE_LIMIT
+      localStorage.setItem(USED_KEY, String(FREE_LIMIT))
+    } else {
+      // 其他错误（分钟限流 / DeepSeek 失败等）正常展示，不触发付费墙
+      errorMsg.value = msg
+    }
   } finally {
     loading.value = false
   }
