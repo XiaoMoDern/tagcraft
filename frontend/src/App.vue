@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { generate } from './api'
 import type { GenerateRequest, GenerateResponse } from './types'
+import { inject } from '@vercel/analytics'
 
 const FREE_LIMIT = 5
 const USED_KEY = 'tagcraft_used_free'
@@ -44,6 +45,8 @@ onMounted(() => {
     upgraded.value = true
     window.location.hash = ''
   }
+  // Initialize Vercel Analytics
+  inject()
 })
 
 const reachedLimit = computed(() => !isPro.value && usedFree.value >= FREE_LIMIT)
