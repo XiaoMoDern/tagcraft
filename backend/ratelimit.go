@@ -11,17 +11,17 @@ import (
 // IP rate limiter —— 防止 DeepSeek 额度被刷。
 // 两层限制：
 //   1. 每分钟 5 次：防 burst（脚本一秒打 100 次）
-//   2. 每天 3 次：防白嫖（普通人无限免费调用）
+//   2. 每天 5 次：防白嫖（普通人无限免费调用）
 //
 // MVP 阶段没有 Stripe webhook，后端不知道谁是付费用户，
 // 所以这个限制对所有人都一样。等 v2 加了 webhook 再按 Pro 状态放宽。
 //
 // 注意：IP 限流的固有缺陷 —— 同一公网 IP 下多个用户（公司/学校/NAT）
-// 会被一起限 3 次。MVP 阶段接受这个取舍。
+// 会被一起限 5 次。MVP 阶段接受这个取舍。
 
 const (
 	rateLimitPerMinute = 5 // 每 IP 每分钟最多 5 次
-	freeLimitPerDay    = 3 // 每 IP 每天最多 3 次免费
+	freeLimitPerDay    = 5 // 每 IP 每天最多 5 次免费
 )
 
 type ipStats struct {
