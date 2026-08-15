@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Etsy Title Character Counter — Check the 140-Character Limit | TagCraft</title>
+    <!-- TODO: 域名到手后把 canonical / og:url 换成 https://trytagcraft.com/title-counter/ -->
+    <link rel="canonical" href="https://tagcraft-three.vercel.app/title-counter/" />
+    <meta name="description" content="Free Etsy title character counter. Paste your title and see if it stays under Etsy's 140-character limit, with a live character count." />
+    <meta name="robots" content="index, follow" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="TagCraft" />
+    <meta property="og:title" content="Etsy Title Character Counter — Check the 140-Character Limit" />
+    <meta property="og:description" content="Check whether your Etsy title stays under the 140-character limit with a live character count." />
+    <meta property="og:url" content="https://tagcraft-three.vercel.app/title-counter/" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Etsy Title Character Counter",
+      "url": "https://tagcraft-three.vercel.app/title-counter/",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "description": "Check whether your Etsy title stays under the 140-character limit.",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    }
+    </script>
+
+    <style>
+      :root {
+        --accent: #f1641e;
+        --accent-hover: #d9550f;
+        --accent-soft: #fef3ee;
+        --bg: #faf7f4;
+        --card: #ffffff;
+        --text: #222222;
+        --text-muted: #767676;
+        --border: #e6e1db;
+        --ok: #2e7d32;
+        --bad: #c62828;
+        --radius: 10px;
+        --shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background: var(--bg); color: var(--text); line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+      .page { max-width: 720px; margin: 0 auto; padding: 28px 20px 60px; }
+
+      .header { text-align: center; margin-bottom: 24px; }
+      .brand { display: inline-flex; align-items: center; gap: 8px; font-size: 24px; font-weight: 800; text-decoration: none; color: var(--text); }
+      .brand .logo { font-size: 28px; }
+      .brand .name { color: var(--accent); }
+
+      h1 { font-size: 26px; text-align: center; margin-bottom: 8px; }
+      .tagline { text-align: center; color: var(--text-muted); margin-bottom: 24px; }
+
+      .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px; margin-bottom: 20px; }
+      .card h2 { font-size: 17px; margin-bottom: 12px; }
+      textarea { width: 100%; min-height: 120px; padding: 12px 14px; font-size: 15px; font-family: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); resize: vertical; outline: none; }
+      textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+      .hint { color: var(--text-muted); font-size: 13px; margin-top: 8px; }
+
+      .counter-card { text-align: center; }
+      .counter { font-size: 40px; font-weight: 800; line-height: 1.1; }
+      .counter .limit { font-size: 20px; color: var(--text-muted); font-weight: 600; }
+      .counter.ok { color: var(--ok); }
+      .counter.bad { color: var(--bad); }
+      .status { margin-top: 6px; font-weight: 600; }
+      .status.ok { color: var(--ok); }
+      .status.bad { color: var(--bad); }
+
+      .bar { height: 10px; background: #eee; border-radius: 6px; overflow: hidden; margin-top: 14px; }
+      .bar .fill { height: 100%; background: var(--accent); transition: width 0.15s ease; }
+      .bar .fill.bad { background: var(--bad); }
+
+      .cta { text-align: center; background: var(--accent-soft); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+      .cta a { display: inline-block; background: var(--accent); color: #fff; text-decoration: none; padding: 13px 28px; border-radius: var(--radius); font-weight: 600; margin-top: 10px; }
+      .cta a:hover { background: var(--accent-hover); }
+
+      .seo { margin-top: 32px; }
+      .seo h2 { font-size: 20px; margin: 26px 0 10px; }
+      .seo h3 { font-size: 15px; margin: 16px 0 6px; }
+      .seo p, .seo li { color: var(--text-muted); font-size: 14px; line-height: 1.7; }
+      .seo ul { padding-left: 20px; margin: 6px 0; }
+
+      .footer { text-align: center; color: var(--text-muted); font-size: 13px; margin-top: 40px; }
+      .footer a { color: var(--accent); text-decoration: none; }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="header">
+        <a class="brand" href="/">
+          <span class="logo">🏷️</span>
+          <span class="name">TagCraft</span>
+        </a>
+      </header>
+
+      <h1>Etsy Title Character Counter</h1>
+      <p class="tagline">Paste your title to see if it stays under Etsy's 140-character limit.</p>
+
+      <section class="card">
+        <h2>Your title</h2>
+        <textarea id="input" placeholder="Paste your Etsy title here.&#10;e.g. Handmade Sterling Silver Turquoise Ring - Boho Adjustable Gemstone Jewelry"></textarea>
+        <p class="hint">Spaces and punctuation count toward the 140-character limit. The first 30–40 characters carry the most SEO weight.</p>
+      </section>
+
+      <section class="card counter-card" id="counter-card">
+        <div class="counter ok" id="counter"><span id="count">0</span> <span class="limit">/ 140</span></div>
+        <p class="status ok" id="status">140 characters remaining</p>
+        <div class="bar"><div class="fill" id="fill" style="width: 0%"></div></div>
+      </section>
+
+      <section class="cta">
+        <strong>Want a title that's already optimized?</strong>
+        <p style="color: var(--text-muted); margin-top: 6px;">TagCraft generates a keyword-rich title under 140 characters, plus 13 tags and a description — free.</p>
+        <a href="/">Generate an Etsy title →</a>
+      </section>
+
+      <section class="seo">
+        <h2>Why Etsy titles are limited to 140 characters</h2>
+        <p>Etsy caps listing titles at 140 characters. Anything longer gets cut off in search results. More importantly, the first 30–40 characters carry the most ranking weight, so your most important keywords should go up front.</p>
+
+        <h2>How to use this tool</h2>
+        <ul>
+          <li>Paste your title into the box.</li>
+          <li>Watch the live character count and progress bar.</li>
+          <li>If it's over 140, trim filler words — keep the keywords that matter.</li>
+        </ul>
+
+        <h2>Frequently asked questions</h2>
+        <h3>How long can an Etsy title be?</h3>
+        <p>140 characters maximum. This counter shows you exactly where you stand.</p>
+
+        <h3>Do spaces count in an Etsy title?</h3>
+        <p>Yes — spaces and punctuation all count toward the 140-character limit.</p>
+
+        <h3>What part of the title matters most?</h3>
+        <p>The first 30–40 characters. Put your strongest keywords there, and keep the rest readable for humans.</p>
+      </section>
+
+      <footer class="footer">
+        <p><a href="/">TagCraft</a> — Etsy SEO titles, tags &amp; descriptions. · <a href="/tag-counter/">Tag character counter</a></p>
+      </footer>
+    </div>
+
+    <script>
+      const input = document.getElementById('input');
+      const countEl = document.getElementById('count');
+      const counterEl = document.getElementById('counter');
+      const statusEl = document.getElementById('status');
+      const fillEl = document.getElementById('fill');
+
+      const LIMIT = 140;
+
+      function charLen(s) {
+        return Array.from(s).length;
+      }
+
+      function render() {
+        const n = charLen(input.value);
+        const over = n > LIMIT;
+        countEl.textContent = n;
+
+        counterEl.className = 'counter ' + (over ? 'bad' : 'ok');
+        statusEl.className = 'status ' + (over ? 'bad' : 'ok');
+        fillEl.className = 'fill' + (over ? ' bad' : '');
+        fillEl.style.width = Math.min(100, (n / LIMIT) * 100) + '%';
+
+        if (over) {
+          statusEl.textContent = (n - LIMIT) + ' characters over the limit';
+        } else {
+          statusEl.textContent = (LIMIT - n) + ' characters remaining';
+        }
+      }
+
+      input.addEventListener('input', render);
+    </script>
+  </body>
+</html>

@@ -257,7 +257,11 @@ async function copy(text: string, key: string) {
 
     <footer class="footer">
       <p>TagCraft — get your Etsy listings found by more buyers.</p>
-      <p><a href="/tag-counter/" class="footer-link">Free Etsy tag character counter →</a></p>
+      <p>
+        <a href="/tag-counter/" class="footer-link">Etsy tag character counter</a>
+        ·
+        <a href="/title-counter/" class="footer-link">Etsy title character counter</a>
+      </p>
     </footer>
   </div>
 </template>
