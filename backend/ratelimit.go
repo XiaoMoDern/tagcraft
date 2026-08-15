@@ -27,7 +27,7 @@ const (
 type ipStats struct {
 	minuteWindow []time.Time // 最近一分钟的请求时间戳（滑动窗口）
 	dayCount     int         // 今天已用的次数
-	dayResetAt   time.Time   // 今天计数重置时间（滚动 24 小时）
+	dayKey       string      // 今天日期（UTC 自然日），跨天归零
 	lastSeen     time.Time   // 最后一次请求时间（用于清理过期 IP）
 }
 
@@ -69,10 +69,11 @@ func (rl *rateLimiter) allow(ip string) (bool, string) {
 		return false, "too many requests, please slow down"
 	}
 
-	// 2. 检查每天免费限制（滚动 24 小时窗口）
-	if s.dayResetAt.IsZero() || now.After(s.dayResetAt) {
+	// 2. 检查每天免费限制（自然日重置：UTC 日期变化即归零，跨天自动恢复 5 次）
+	dayKey := now.UTC().Format("2006-01-02")
+	if s.dayKey != dayKey {
+		s.dayKey = dayKey
 		s.dayCount = 0
-		s.dayResetAt = now.Add(24 * time.Hour)
 	}
 	if s.dayCount >= freeLimitPerDay {
 		return false, "daily free limit reached"

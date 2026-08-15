@@ -20,6 +20,7 @@ TagCraft 的重要变更记录，按时间倒序。格式参考 [Keep a Changelo
 ### Fixed
 - 标签超长被硬切成碎片（如 `guest book for`、`personalized guest`）——改为「词边界 + 去停用词」截断
 - 珠宝类输出 `native american` 标签的封店级法律风险——安全护栏拦截
+- 免费次数不按天重置——前端 localStorage 永久计数 + 后端滚动 24h，均改为「自然日重置」（前端按本地日、后端按 UTC 日）
 
 ## 2026-08-14
 

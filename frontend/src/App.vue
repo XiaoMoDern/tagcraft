@@ -8,6 +8,31 @@ const USED_KEY = 'tagcraft_used_free'
 const PRO_KEY = 'tagcraft_pro'
 const WAITLIST_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSebWLkESa_Hrb789FuukjT5lWik1_q5fKleYWnmf657G7TvnQ/viewform'
 
+// 免费次数按「自然日」重置：存 { date, count }，跨天归零。
+// 日期用浏览器本地时区（符合用户「每天 5 次」的直觉）。
+// 注意：后端按 UTC 自然日重置，两者在午夜附近可能有几小时偏差，可接受。
+function todayKey() {
+  const d = new Date()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${d.getFullYear()}-${m}-${day}`
+}
+
+function loadUsedFree(): number {
+  try {
+    const raw = localStorage.getItem(USED_KEY)
+    if (!raw) return 0
+    const parsed = JSON.parse(raw)
+    return parsed && parsed.date === todayKey() ? Number(parsed.count) || 0 : 0
+  } catch {
+    return 0
+  }
+}
+
+function saveUsedFree(count: number) {
+  localStorage.setItem(USED_KEY, JSON.stringify({ date: todayKey(), count }))
+}
+
 const categories = [
   { value: 'jewelry', label: 'Jewelry' },
   { value: 'home', label: 'Home & Living' },
@@ -35,7 +60,7 @@ const usedFree = ref(0)
 const isPro = ref(false)
 
 onMounted(() => {
-  usedFree.value = Number(localStorage.getItem(USED_KEY) || 0)
+  usedFree.value = loadUsedFree()
   isPro.value = localStorage.getItem(PRO_KEY) === 'true'
   // Stripe 支付成功后跳回 #success，这里解锁
   if (window.location.hash === '#success') {
@@ -62,7 +87,7 @@ async function handleGenerate() {
     result.value = await generate(form.value)
     if (!isPro.value) {
       usedFree.value += 1
-      localStorage.setItem(USED_KEY, String(usedFree.value))
+      saveUsedFree(usedFree.value)
     }
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'generation failed'
@@ -71,7 +96,7 @@ async function handleGenerate() {
       // （IP 计数残留 / 同一公网 IP 多人共用 / 后端先于前端拦截）。
       // 强制拉到上限，触发付费墙，避免"后端 429 拦了、前端却不显示入口"的死锁。
       usedFree.value = FREE_LIMIT
-      localStorage.setItem(USED_KEY, String(FREE_LIMIT))
+      saveUsedFree(FREE_LIMIT)
     } else {
       // 其他错误（分钟限流 / DeepSeek 失败等）正常展示，不触发付费墙
       errorMsg.value = msg
