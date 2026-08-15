@@ -198,6 +198,38 @@ async function copy(text: string, key: string) {
       </section>
     </main>
 
+    <!-- SEO 内容：How it works + Why + FAQ（服务端渲染前靠 JS 渲染，Google 可收录） -->
+    <section class="seo">
+      <h2>How the Etsy title generator works</h2>
+      <ol class="steps">
+        <li><strong>Describe your product</strong> — paste what it is, the material, style, and who it's for.</li>
+        <li><strong>Add keywords</strong> — the terms buyers actually search for (e.g. "turquoise ring, boho jewelry").</li>
+        <li><strong>Generate &amp; copy</strong> — get a title under 140 characters, 13 tags under 20 characters each, and a keyword-rich description to paste into your listing.</li>
+      </ol>
+
+      <h2>Why sellers use TagCraft</h2>
+      <ul class="points">
+        <li><strong>Etsy-compliant, guaranteed</strong> — titles stay under 140 characters and every one of the 13 tags stays under 20 characters, so Etsy never silently rejects them.</li>
+        <li><strong>13 long-tail tags</strong> — covering material, style, occasion, and audience, instead of repeating the same keyword.</li>
+        <li><strong>Free to start</strong> — 5 free generations per day, no signup.</li>
+      </ul>
+
+      <h2>Etsy SEO FAQ</h2>
+      <div class="faq">
+        <h3>How long can an Etsy title be?</h3>
+        <p>Etsy titles are limited to 140 characters. The first 30–40 characters carry the most weight, so TagCraft puts your most important keywords up front.</p>
+
+        <h3>How many tags can I use on Etsy?</h3>
+        <p>Etsy gives you 13 tag slots, each up to 20 characters. Tags over 20 characters are rejected, so TagCraft keeps every tag at 20 characters or fewer.</p>
+
+        <h3>What makes good Etsy tags?</h3>
+        <p>Long-tail phrases (2–4 words) that match real buyer searches — material, style, use case, occasion, and color — instead of single generic words.</p>
+
+        <h3>Is TagCraft free?</h3>
+        <p>Yes — you get 5 free generations per day. A Pro plan is coming soon.</p>
+      </div>
+    </section>
+
     <footer class="footer">
       <p>TagCraft — get your Etsy listings found by more buyers.</p>
     </footer>
@@ -441,5 +473,38 @@ async function copy(text: string, key: string) {
   color: var(--text-muted);
   font-size: 13px;
   margin-top: 40px;
+}
+
+.seo {
+  margin-top: 40px;
+  padding: 0 4px;
+}
+
+.seo h2 {
+  font-size: 20px;
+  margin: 28px 0 12px;
+}
+
+.seo h3 {
+  font-size: 15px;
+  margin: 16px 0 6px;
+}
+
+.seo p,
+.seo li {
+  color: var(--text-muted);
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.steps,
+.points {
+  padding-left: 20px;
+  margin: 0 0 8px;
+}
+
+.steps li,
+.points li {
+  margin-bottom: 8px;
 }
 </style>
