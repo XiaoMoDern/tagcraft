@@ -257,6 +257,7 @@ async function copy(text: string, key: string) {
 
     <footer class="footer">
       <p>TagCraft — get your Etsy listings found by more buyers.</p>
+      <p><a href="/tag-counter/" class="footer-link">Free Etsy tag character counter →</a></p>
     </footer>
   </div>
 </template>
@@ -498,6 +499,16 @@ async function copy(text: string, key: string) {
   color: var(--text-muted);
   font-size: 13px;
   margin-top: 40px;
+}
+
+.footer-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
 }
 
 .seo {

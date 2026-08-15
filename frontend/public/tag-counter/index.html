@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Etsy Tag Character Counter — Check the 20-Character Limit | TagCraft</title>
+    <!-- TODO: 域名到手后把 canonical / og:url 换成 https://trytagcraft.com/tag-counter/ -->
+    <link rel="canonical" href="https://tagcraft-three.vercel.app/tag-counter/" />
+    <meta name="description" content="Free Etsy tag character counter. Paste your tags and instantly see which ones are over Etsy's 20-character limit — before Etsy silently rejects them." />
+    <meta name="robots" content="index, follow" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="TagCraft" />
+    <meta property="og:title" content="Etsy Tag Character Counter — Check the 20-Character Limit" />
+    <meta property="og:description" content="Paste your tags and instantly see which ones are over Etsy's 20-character limit." />
+    <meta property="og:url" content="https://tagcraft-three.vercel.app/tag-counter/" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Etsy Tag Character Counter",
+      "url": "https://tagcraft-three.vercel.app/tag-counter/",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "description": "Check whether your Etsy tags stay under the 20-character limit.",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    }
+    </script>
+
+    <style>
+      :root {
+        --accent: #f1641e;
+        --accent-hover: #d9550f;
+        --accent-soft: #fef3ee;
+        --bg: #faf7f4;
+        --card: #ffffff;
+        --text: #222222;
+        --text-muted: #767676;
+        --border: #e6e1db;
+        --ok: #2e7d32;
+        --ok-soft: #e8f5e9;
+        --bad: #c62828;
+        --bad-soft: #fdecea;
+        --radius: 10px;
+        --shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background: var(--bg); color: var(--text); line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+      .page { max-width: 720px; margin: 0 auto; padding: 28px 20px 60px; }
+
+      .header { text-align: center; margin-bottom: 24px; }
+      .brand { display: inline-flex; align-items: center; gap: 8px; font-size: 24px; font-weight: 800; text-decoration: none; color: var(--text); }
+      .brand .logo { font-size: 28px; }
+      .brand .name { color: var(--accent); }
+
+      h1 { font-size: 26px; text-align: center; margin-bottom: 8px; }
+      .tagline { text-align: center; color: var(--text-muted); margin-bottom: 24px; }
+
+      .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px; margin-bottom: 20px; }
+      .card h2 { font-size: 17px; margin-bottom: 12px; }
+      textarea { width: 100%; min-height: 140px; padding: 12px 14px; font-size: 15px; font-family: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); resize: vertical; outline: none; }
+      textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+      .hint { color: var(--text-muted); font-size: 13px; margin-top: 8px; }
+
+      .summary { font-weight: 600; margin-bottom: 14px; min-height: 24px; }
+      .summary .bad { color: var(--bad); }
+      .summary .ok { color: var(--ok); }
+
+      .results { display: flex; flex-direction: column; gap: 8px; }
+      .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border-radius: 8px; font-size: 14px; }
+      .row .tag-text { word-break: break-all; flex: 1; }
+      .row .count { font-weight: 700; white-space: nowrap; }
+      .row.ok { background: var(--ok-soft); color: var(--ok); }
+      .row.bad { background: var(--bad-soft); color: var(--bad); }
+      .row.bad .count { color: var(--bad); }
+      .row.ok .count { color: var(--ok); }
+
+      .cta { text-align: center; background: var(--accent-soft); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+      .cta a { display: inline-block; background: var(--accent); color: #fff; text-decoration: none; padding: 13px 28px; border-radius: var(--radius); font-weight: 600; margin-top: 10px; }
+      .cta a:hover { background: var(--accent-hover); }
+
+      .seo { margin-top: 32px; }
+      .seo h2 { font-size: 20px; margin: 26px 0 10px; }
+      .seo h3 { font-size: 15px; margin: 16px 0 6px; }
+      .seo p, .seo li { color: var(--text-muted); font-size: 14px; line-height: 1.7; }
+      .seo ul { padding-left: 20px; margin: 6px 0; }
+
+      .footer { text-align: center; color: var(--text-muted); font-size: 13px; margin-top: 40px; }
+      .footer a { color: var(--accent); text-decoration: none; }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="header">
+        <a class="brand" href="/">
+          <span class="logo">🏷️</span>
+          <span class="name">TagCraft</span>
+        </a>
+      </header>
+
+      <h1>Etsy Tag Character Counter</h1>
+      <p class="tagline">Paste your tags below — instantly see which ones are over Etsy's 20-character limit.</p>
+
+      <section class="card">
+        <h2>Your tags</h2>
+        <textarea id="input" placeholder="Paste one tag per line, or comma-separated.&#10;e.g.&#10;sterling silver ring&#10;handmade turquoise ring&#10;native american style silver ring"></textarea>
+        <p class="hint">One tag per line or separated by commas. Spaces count toward the 20-character limit.</p>
+      </section>
+
+      <section class="card" id="result-card" style="display: none">
+        <div class="summary" id="summary"></div>
+        <div class="results" id="results"></div>
+      </section>
+
+      <section class="cta">
+        <strong>Some tags over the limit?</strong>
+        <p style="color: var(--text-muted); margin-top: 6px;">TagCraft generates 13 compliant tags (all under 20 characters) plus a title and description — free.</p>
+        <a href="/">Generate compliant Etsy tags →</a>
+      </section>
+
+      <section class="seo">
+        <h2>Why Etsy tags must stay under 20 characters</h2>
+        <p>Etsy allows up to 13 tags per listing, and each tag has a hard limit of 20 characters. If a tag is 21 characters or longer, Etsy won't let you save it — you lose that tag slot and the search traffic that comes with it.</p>
+
+        <h2>How to use this tool</h2>
+        <ul>
+          <li>Paste the tags you've written (or copy them from a spreadsheet).</li>
+          <li>Each tag is counted individually — spaces and punctuation included.</li>
+          <li>Tags over 20 characters are highlighted in red; shorten them or replace them.</li>
+        </ul>
+
+        <h2>Frequently asked questions</h2>
+        <h3>How many tags can I use on Etsy?</h3>
+        <p>Etsy gives you 13 tag slots per listing. Use all 13 — each tag is another chance to be found in search.</p>
+
+        <h3>How long can each Etsy tag be?</h3>
+        <p>20 characters maximum, including spaces. This counter flags anything over that limit.</p>
+
+        <h3>What happens if my tag is over 20 characters?</h3>
+        <p>Etsy rejects the tag, so the slot is wasted. Better to shorten it to a 2–4 word phrase that still captures the search intent.</p>
+      </section>
+
+      <footer class="footer">
+        <p><a href="/">TagCraft</a> — Etsy SEO titles, tags &amp; descriptions.</p>
+      </footer>
+    </div>
+
+    <script>
+      const input = document.getElementById('input');
+      const resultCard = document.getElementById('result-card');
+      const summary = document.getElementById('summary');
+      const results = document.getElementById('results');
+
+      function charLen(s) {
+        // 按 Unicode 码点计数（跟可见字符基本一致；纯英文标签下等价于 .length）
+        return Array.from(s).length;
+      }
+
+      function parseTags(raw) {
+        // 按换行 / 逗号 / 分号拆分，去空白，过滤空项
+        return raw
+          .split(/[\n,;]+/)
+          .map((t) => t.trim())
+          .filter((t) => t.length > 0);
+      }
+
+      function render() {
+        const tags = parseTags(input.value);
+        if (tags.length === 0) {
+          resultCard.style.display = 'none';
+          return;
+        }
+        resultCard.style.display = 'block';
+
+        const over = tags.filter((t) => charLen(t) > 20).length;
+        const ok = tags.length - over;
+
+        if (over === 0) {
+          summary.innerHTML = '<span class="ok">✓ All ' + tags.length + ' tags are 20 characters or fewer.</span>';
+        } else {
+          summary.innerHTML = tags.length + ' tags total — <span class="bad">' + over + ' over 20 characters</span><span class="ok"> · ' + ok + ' OK</span>';
+        }
+
+        results.innerHTML = '';
+        tags.forEach((tag) => {
+          const n = charLen(tag);
+          const row = document.createElement('div');
+          row.className = 'row ' + (n > 20 ? 'bad' : 'ok');
+          const label = n > 20 ? '⚠ ' : '✓ ';
+          row.innerHTML = '<span class="tag-text"></span><span class="count"></span>';
+          row.querySelector('.tag-text').textContent = label + tag;
+          row.querySelector('.count').textContent = n + ' / 20';
+          results.appendChild(row);
+        });
+      }
+
+      input.addEventListener('input', render);
+    </script>
+  </body>
+</html>
