@@ -11,8 +11,8 @@
 |---|---|
 | 前端 | Vue3 + TS + Vite（纯 CSS，无 UI 库） |
 | 后端 | Go 1.26 + net/http（零第三方依赖，Stripe 走 REST API） |
-| AI | DeepSeek API（OpenAI 兼容接口，强制 `response_format: json_object`） |
-| 支付 | Stripe Checkout（订阅模式 $19/月） |
+| AI | DeepSeek API（默认 `deepseek-v4-flash`，`DEEPSEEK_MODEL` 可覆盖；强制 `response_format: json_object`） |
+| 支付 | Stripe Checkout（waitlist 模式，Pro $9/月） |
 | 部署 | 前端 Vercel / 后端 Railway |
 
 ## 目录结构
@@ -22,10 +22,12 @@ tagcraft/
 ├── backend/
 │   ├── main.go        # 入口：路由 + CORS + 启动 + loadEnv
 │   ├── server.go      # /generate handler + 请求/响应类型 + writeJSON + withCORS
-│   ├── deepseek.go    # DeepSeek 调用（含超时、错误处理、env var）
-│   ├── prompt.go      # Etsy SEO system prompt（产品核心壁垒）
+│   ├── deepseek.go    # DeepSeek 调用（默认 v4-flash，DEEPSEEK_MODEL 可覆盖）
+│   ├── prompt.go      # Etsy SEO system prompt（7 类禁止声明 + 标签规则）
+│   ├── safety.go      # 内容安全：封店级硬词 sanitizeSEO + 声明词 echo 校验 sanitizeClaims
+│   ├── safety_test.go # safety.go 单元测试
 │   ├── stripe.go      # /create-checkout（直接调 Stripe REST API + tax_code）
-│   ├── ratelimit.go   # IP rate limiter（每分钟 5 次 + 每天 3 次免费）
+│   ├── ratelimit.go   # IP rate limiter（每分钟 5 次 + 每天 5 次免费）
 │   └── .env.example
 ├── frontend/
 │   ├── src/
@@ -78,6 +80,7 @@ npm run dev
 3. ⚠️ **关键：Settings → Root Directory 填 `backend`**（go.mod 在 `backend/` 子目录下，不填会从仓库根构建，检测到 `frontend/` 跑前端构建报错）
 4. 环境变量：
    - `DEEPSEEK_API_KEY` — 必填（https://platform.deepseek.com）
+   - `DEEPSEEK_MODEL` — 可选，默认 `deepseek-v4-flash`（旗舰版填 `deepseek-v4-pro`）
    - `STRIPE_SECRET_KEY` — 启用付费必填（Stripe test key `sk_test_...`）
    - `STRIPE_SUCCESS_URL` — `https://你的前端域名.vercel.app/#success`
    - `STRIPE_CANCEL_URL` — `https://你的前端域名.vercel.app/`
@@ -85,7 +88,7 @@ npm run dev
 5. Deploy → Settings → Networking → **Generate Domain** → 端口填 `8080` → 拿到 `xxx.up.railway.app` 域名
 6. 验证：`curl https://xxx.up.railway.app/health` → `{"status":"ok"}`
 
-> **IP rate limit**：`/generate` 有限流，每 IP 每分钟 5 次 + 每天 3 次免费。MVP 阶段无 Stripe webhook，付费用户暂同此限制。重置计数：Railway Redeploy（清内存）。
+> **IP rate limit**：`/generate` 有限流，每 IP 每分钟 5 次 + 每天 5 次免费。MVP 阶段无 Stripe webhook，付费用户暂同此限制。重置计数：Railway Redeploy（清内存）。
 
 ### 前端 → Vercel
 
@@ -115,9 +118,10 @@ npm run dev
 1. **后端零第三方依赖**：Stripe 不用 SDK，直接 `net/http` 调 REST API（form-encoded）。设计文档原本用 stripe-go，改成直接调避免依赖、保持"标准库够用"原则。功能等价。
 2. **DeepSeek 强制 JSON 输出**：`response_format: {type: "json_object"}`，避免模型输出 markdown 代码块导致解析失败。content 字段需二次 `json.Unmarshal`。
 3. **prompt 用英文**：Etsy 是英文市场，输出必须是英文，prompt 也用英文避免模型串语言。
-4. **付费墙纯前端**：localStorage 记免费次数（3 次）+ pro 标记。MVP 不做服务端校验，第二版加 webhook。
+4. **付费墙纯前端**：localStorage 记免费次数（5 次）+ pro 标记。MVP 不做服务端校验，第二版加 webhook。
 5. **Stripe 回跳用 hash 路由**：`/#success`，SPA 无需额外路由配置，onMounted 检测 hash 解锁。
-6. **IP rate limit 防刷**：`/generate` 加 middleware，每 IP 每分钟 5 次（防 burst）+ 每天 3 次免费（防白嫖兜底）。滑动窗口 + 滚动 24h + goroutine 定时清理过期 IP。MVP 阶段无 webhook，付费用户暂同此限制。
+6. **IP rate limit 防刷**：`/generate` 加 middleware，每 IP 每分钟 5 次（防 burst）+ 每天 5 次免费（防白嫖兜底）。滑动窗口 + 滚动 24h + goroutine 定时清理过期 IP。MVP 阶段无 webhook，付费用户暂同此限制。
+7. **内容安全三层校验**：① prompt 内嵌 7 类禁止声明（预防）② `safety.go` 的 `sanitizeSEO` 硬词表剔除封店级词（部落/品牌/医疗，无条件）③ `sanitizeClaims` 声明词 echo 校验（绿色/安全/材质声明只有卖家逐字提过才保留）。三层各自独立，封店级词保证不落地。
 
 ## 部署踩坑记录（2026-08-13 首次部署）
 
