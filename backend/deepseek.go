@@ -10,10 +10,16 @@ import (
 	"time"
 )
 
-const (
-	deepseekBaseURL = "https://api.deepseek.com/v1/chat/completions"
-	deepseekModel   = "deepseek-chat"
-)
+const deepseekBaseURL = "https://api.deepseek.com/v1/chat/completions"
+
+// deepseekModel 默认用 v4-flash（最便宜档，已验证 SEO 质量不掉档）。
+// 可用环境变量 DEEPSEEK_MODEL 覆盖（如 deepseek-v4-pro）。
+func deepseekModel() string {
+	if m := os.Getenv("DEEPSEEK_MODEL"); m != "" {
+		return m
+	}
+	return "deepseek-v4-flash"
+}
 
 // 60s 超时：LLM 生成可能比较慢，但也不能无限等
 var deepseekClient = &http.Client{Timeout: 60 * time.Second}
@@ -54,7 +60,7 @@ func callDeepSeek(systemPromptMsg, userPrompt string) (string, error) {
 	}
 
 	reqBody := chatRequest{
-		Model: deepseekModel,
+		Model: deepseekModel(),
 		Messages: []message{
 			{Role: "system", Content: systemPromptMsg},
 			{Role: "user", Content: userPrompt},
