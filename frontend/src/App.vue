@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { generate } from './api'
-import type { GenerateRequest, GenerateResponse } from './types'
+import type { GenerateRequest, GenerateResponse, HistoryEntry } from './types'
 
 const FREE_LIMIT = 5
 const USED_KEY = 'tagcraft_used_free'
 const PRO_KEY = 'tagcraft_pro'
+const HISTORY_KEY = 'tagcraft_history'
+const HISTORY_LIMIT = 20
 const WAITLIST_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSebWLkESa_Hrb789FuukjT5lWik1_q5fKleYWnmf657G7TvnQ/viewform'
 
 // 免费次数按「自然日」重置：存 { date, count }，跨天归零。
@@ -33,6 +35,64 @@ function saveUsedFree(count: number) {
   localStorage.setItem(USED_KEY, JSON.stringify({ date: todayKey(), count }))
 }
 
+// ---- 历史记录（纯前端 localStorage，无后端改动）----
+// 注意：历史只存在当前浏览器，换设备/清站点数据会丢；服务端存储等 v2 加登录后再做。
+function loadHistory(): HistoryEntry[] {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+function persistHistory() {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history.value))
+  } catch {
+    // 配额满等异常静默忽略，不打断生成流程
+  }
+}
+
+function addHistoryEntry(req: GenerateRequest, res: GenerateResponse) {
+  const entry: HistoryEntry = {
+    id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+    ts: Date.now(),
+    request: { ...req },
+    response: { ...res, tags: [...res.tags] },
+  }
+  history.value = [entry, ...history.value].slice(0, HISTORY_LIMIT)
+  persistHistory()
+}
+
+function deleteHistoryEntry(id: string) {
+  history.value = history.value.filter((h) => h.id !== id)
+  persistHistory()
+}
+
+function clearHistory() {
+  history.value = []
+  persistHistory()
+}
+
+function formatTime(ts: number) {
+  const d = new Date(ts)
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mm = String(d.getMinutes()).padStart(2, '0')
+  return `${d.getFullYear()}-${m}-${day} ${hh}:${mm}`
+}
+
+// 回看历史：只把结果填回结果区（不动表单，避免覆盖当前正在编辑的输入）
+async function restoreHistory(entry: HistoryEntry) {
+  result.value = entry.response
+  await nextTick()
+  resultCard.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 const categories = [
   { value: 'jewelry', label: 'Jewelry' },
   { value: 'home', label: 'Home & Living' },
@@ -58,9 +118,12 @@ const upgraded = ref(false)
 
 const usedFree = ref(0)
 const isPro = ref(false)
+const history = ref<HistoryEntry[]>([])
+const resultCard = ref<HTMLElement | null>(null)
 
 onMounted(() => {
   usedFree.value = loadUsedFree()
+  history.value = loadHistory()
   isPro.value = localStorage.getItem(PRO_KEY) === 'true'
   // Stripe 支付成功后跳回 #success，这里解锁
   if (window.location.hash === '#success') {
@@ -85,6 +148,7 @@ async function handleGenerate() {
   loading.value = true
   try {
     result.value = await generate(form.value)
+    addHistoryEntry(form.value, result.value)
     if (!isPro.value) {
       usedFree.value += 1
       saveUsedFree(usedFree.value)
@@ -181,7 +245,7 @@ async function copy(text: string, key: string) {
       <div v-if="errorMsg" class="banner error">{{ errorMsg }}</div>
 
       <!-- 结果区 -->
-      <section v-if="result" class="card result-card">
+      <section v-if="result" ref="resultCard" class="card result-card">
         <div class="block">
           <div class="block-head">
             <label>Title</label>
@@ -213,6 +277,27 @@ async function copy(text: string, key: string) {
             {{ copiedKey === 'desc' ? 'Copied!' : 'Copy' }}
           </button>
         </div>
+      </section>
+
+      <!-- 历史记录（localStorage，最新在前，最多 20 条） -->
+      <section v-if="history.length" class="card history-card">
+        <div class="history-head">
+          <h2 class="section-title">History</h2>
+          <button class="btn-clear" @click="clearHistory">Clear all</button>
+        </div>
+        <ul class="history-list">
+          <li v-for="h in history" :key="h.id" class="history-item">
+            <div class="history-main">
+              <span class="history-time">{{ formatTime(h.ts) }}</span>
+              <p class="history-title">{{ h.response.title }}</p>
+              <p class="history-product">{{ h.request.product }}</p>
+            </div>
+            <div class="history-actions">
+              <button class="btn-copy" @click="restoreHistory(h)">View</button>
+              <button class="btn-copy" @click="deleteHistoryEntry(h.id)">Delete</button>
+            </div>
+          </li>
+        </ul>
       </section>
 
       <!-- 付费墙（MVP 阶段 waitlist，等切 Paddle 后改回真实 checkout） -->
@@ -546,5 +631,86 @@ async function copy(text: string, key: string) {
 .steps li,
 .points li {
   margin-bottom: 8px;
+}
+
+.history-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-head .section-title {
+  margin-bottom: 0;
+}
+
+.btn-clear {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
+.btn-clear:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+.history-main {
+  min-width: 0;
+}
+
+.history-time {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.history-title {
+  font-weight: 600;
+  margin: 4px 0 2px;
+  word-break: break-word;
+}
+
+.history-product {
+  font-size: 13px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.history-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
 }
 </style>

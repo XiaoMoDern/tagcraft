@@ -4,6 +4,12 @@ TagCraft 的重要变更记录，按时间倒序。格式参考 [Keep a Changelo
 
 > 每个条目末尾的短 hash 是对应 commit，可用 `git show <hash>` 查看完整 diff。
 
+## 2026-08-17
+
+### Added
+- **历史记录**（`frontend/src/App.vue` + `types.ts`）：每次生成成功自动存 localStorage（最多 20 条、最新在前），支持「View 回填结果 / 单条删除 / 清空」。纯前端实现无后端改动；历史仅存当前浏览器，服务端存储等 v2 加登录后做
+- **前端请求 60s 超时**（`frontend/src/api.ts`）：后端冷启动（Railway 睡眠唤醒）+ DeepSeek 推理最长 30-60s，之前无超时会无限等待「无响应」；现在超时给明确提示而非挂死
+
 ## 2026-08-15
 
 ### Added
