@@ -122,6 +122,12 @@ const history = ref<HistoryEntry[]>([])
 const resultCard = ref<HTMLElement | null>(null)
 
 onMounted(() => {
+  // 品类落地页（如 /jewelry）通过 ?category=xxx 预选品类
+  const qp = new URLSearchParams(window.location.search)
+  const cat = qp.get('category')
+  if (cat && categories.some((c) => c.value === cat)) {
+    form.value.category = cat
+  }
   usedFree.value = loadUsedFree()
   history.value = loadHistory()
   isPro.value = localStorage.getItem(PRO_KEY) === 'true'
@@ -343,6 +349,8 @@ async function copy(text: string, key: string) {
     <footer class="footer">
       <p>TagCraft — get your Etsy listings found by more buyers.</p>
       <p>
+        <a href="/jewelry/" class="footer-link">Etsy jewelry title generator</a>
+        ·
         <a href="/tag-counter/" class="footer-link">Etsy tag character counter</a>
         ·
         <a href="/title-counter/" class="footer-link">Etsy title character counter</a>
